@@ -1,0 +1,55 @@
+const express = require('express');
+const { Pool } = require('pg');
+const app = express();
+const port = 3000;
+
+app.use(express.json());
+
+const pool = new Pool({
+  user: 'tu_usuario',
+  host: 'localhost',
+  database: 'tu_base_de_datos',
+  password: 'tu_contraseña',
+  port: 5432, // Puerto por defecto de PostgreSQL
+});
+
+// Obtener todas las facturas
+app.get('/facturas', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM FACTURAS');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+app.post('/facturas', async (req, res) => {
+  const { idusuario, idproductos, subtotal } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO FACTURAS (idusuario, idproductos, subtotal) VALUES ($1, $2, $3) RETURNING *',
+      [idusuario, idproductos, subtotal]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Obtener una factura por ID
+app.get('/facturas/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM FACTURAS WHERE id = $1', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Factura no encontrada' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+app.listen(port, () => {
+  console.log(`API de Facturas corriendo en http://localhost:${port}`);
+});
