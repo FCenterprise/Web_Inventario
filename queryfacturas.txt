@@ -1,0 +1,6 @@
+Create table FACTURAS {
+    id SERIAL NOT NULL,
+    idusuario integer,
+    idproductos integer,
+    subtotal
+}
